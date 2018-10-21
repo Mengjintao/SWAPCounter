@@ -32,7 +32,7 @@ void parameter::getopt(int argc, char **argv)
 	    	printf("Usage: %s -k <kmerlength> -r <reference size> -c <cutoff Threshod> -g <grouped processes> -i <input Fasta data> -o <output data directory>\n",argv[0]);
 		exit(0);
 	    case 'v':
-		printf("SWAP-Assembler version 0.2\n");
+		printf("SWAP-Assembler version 0.5\n");
 		exit(0);
 	    case 'k':
 		if(i+1 == argc) 
@@ -101,7 +101,7 @@ void parameter::getopt(int argc, char **argv)
 	    case 'r':
 		if(i+1 == argc) 
 		{
-		    printf("Error: -o needs a directory name used for the output data\n");
+		    printf("Error: -r needs a reference size for the Bloom filter\n");
 	    	    printf("Usage: %s -k <kmerlength> -r <reference size> -c <cutoff Threshod> -g <grouped processes> -i <input Fasta data> -o <output data directory>\n",argv[0]);
 		    exit(0);
 		}
@@ -160,7 +160,6 @@ void parameter::getopt(int argc, char **argv)
 
 void parameter::getParameters(int argc, char **argv, MPIEnviroment *MPIcontrol)
 {
-    
     getopt(argc, argv);
 
     if(MPIcontrol->rank==0)

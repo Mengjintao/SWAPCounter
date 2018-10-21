@@ -374,17 +374,18 @@ void kmerGraph::extractKmerGraph(parameter *parameters, MPIEnviroment *MPIcontro
 		for(long long i=0;i<size;i++)
 		{
 			tmp[kmers[i]]++;
-//			if(MPIcontrol->rank==39)	{printf("Proc0_kmer %lu\n", kmers[i]); fflush(stdout);}
 
 			if(kmolecules.find(kmers[i])!=kmolecules.end())	 kmolecules[kmers[i]]++;
 			else 
 			{
-			if(bFilter->bloomAdd(kmers[i]) < parameters->cutoffThreshold)	continue;	
-//			int ProcsID = getProcsID(kmers[i], parameters->hashLength, MPIcontrol);
-//			assert(ProcsID == MPIcontrol->rank);
-//			unsigned char *p = (unsigned char *) &kmolecules[kmers[i]];
-//			for(int j=0; j<8; j++) 	if(p[j]<250)	p[j] += ((arcs[i]&(1<<j))?1:0);
-			else			kmolecules[kmers[i]]=parameters->cutoffThreshold;
+				int retFilter = bFilter->bloomAdd(kmers[i]);
+				if( retFilter==0 )		kmolecules[kmers[i]]++;
+				else if( retFilter < parameters->cutoffThreshold)	continue;	
+	//			int ProcsID = getProcsID(kmers[i], parameters->hashLength, MPIcontrol);
+	//			assert(ProcsID == MPIcontrol->rank);
+	//			unsigned char *p = (unsigned char *) &kmolecules[kmers[i]];
+	//			for(int j=0; j<8; j++) 	if(p[j]<250)	p[j] += ((arcs[i]&(1<<j))?1:0);
+				else				kmolecules[kmers[i]]=parameters->cutoffThreshold;
 			}
 		}
 	
@@ -498,7 +499,7 @@ int kmerGraph::constructKmerGraph(parameter *parameters, MPIEnviroment *MPIcontr
 		{
 			for(long long int i=0; i<readEnd-readStart; i++)	readBuf[i] = readBuf[readStart+i];
 			readBuf[readEnd-readStart] = 0;
-			readEnd = readEnd-readStart;			
+			readEnd   = readEnd-readStart;			
 			readStart = 0;
 		}
 
@@ -589,8 +590,8 @@ void kmerGraph::printKmerFreq(parameter *parameters, MPIEnviroment *MPIcontrol)
 		}	
 	}
 
-	printf("Proc %d: tmpkmernum = %lu, filterkmernum = %lu, bloomkmer=%lu\n", MPIcontrol->rank, kmernum, validkmernum, bloomkmer);
-	printf("loss = %lu, miss = %lu, delta=%lu\n", loss, missFreq, delta/missFreq);
+	printf("Proc %d: tmpkmernum = %lu, validfilterkmernum = %lu, bloomfilterkmernum=%lu\n", MPIcontrol->rank, kmernum, validkmernum, bloomkmer);
+	printf("loss(number of validkmer but lost by Bloomfilter)=%lu, miss(the frequence of validkmer wrongly counted by bloom filter)=%lu, delta=%lu\n", loss, missFreq, delta/missFreq);
 	long long int totloss=0, totmiss=0, totdelta=0, totkmernum=0, totbloomkmer=0, allkmers=0;	
 	MPI_Reduce(&loss, &totloss, 1, MPI_LONG_LONG_INT, MPI_SUM, 0, MPI_COMM_WORLD);	
 	MPI_Reduce(&missFreq, &totmiss, 1, MPI_LONG_LONG_INT, MPI_SUM, 0, MPI_COMM_WORLD);	
